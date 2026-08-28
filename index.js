@@ -17,41 +17,43 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  let pairingRequested = false;
+  if (!state.creds.registered) {
+    const phoneNumber = process.env.PHONE_NUMBER;
 
-  sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
-    if (!state.creds.registered && !pairingRequested) {
-      pairingRequested = true;
-
-      try {
-        const phoneNumber = process.env.PHONE_NUMBER;
-
-        if (!phoneNumber) {
-          console.log("❌ PHONE_NUMBER environment variable is missing.");
-          return;
-        }
-
-        const code = await sock.requestPairingCode(phoneNumber);
-
-        console.log("================================");
-        console.log("🌎 WORLD OF Q'S BOT");
-        console.log("PAIRING CODE:", code);
-        console.log("================================");
-      } catch (error) {
-        console.log("Pairing code error:", error.message);
-      }
+    if (!phoneNumber) {
+      console.log("❌ PHONE_NUMBER environment variable is missing");
+      return;
     }
 
+    try {
+      console.log("Connecting to WhatsApp...");
+
+      const code = await sock.requestPairingCode(phoneNumber);
+
+      console.log("================================");
+      console.log("🌎 WORLD OF Q'S BOT");
+      console.log("PAIRING CODE:", code);
+      console.log("================================");
+    } catch (error) {
+      console.log("❌ Pairing code error:", error.message);
+    }
+  }
+
+  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
     if (connection === "open") {
       console.log("🌎 World Of Q's Bot is Online! ✅");
     }
 
-    if (
-      connection === "close" &&
-      lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
-    ) {
-      console.log("Connection closed. Restarting...");
-      setTimeout(startBot, 3000);
+    if (connection === "close") {
+      const statusCode =
+        lastDisconnect?.error?.output?.statusCode;
+
+      if (statusCode !== DisconnectReason.loggedOut) {
+        console.log("Connection closed. Restarting...");
+        setTimeout(startBot, 5000);
+      } else {
+        console.log("❌ WhatsApp logged out.");
+      }
     }
   });
 
