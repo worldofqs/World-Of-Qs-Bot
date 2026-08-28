@@ -7,11 +7,12 @@ const {
 
 const P = require("pino");
 
-let starting = false;
+let reconnecting = false;
 
 async function startBot() {
-  if (starting) return;
-  starting = true;
+  if (reconnecting) return;
+
+  reconnecting = true;
 
   try {
     const { state, saveCreds } =
@@ -21,12 +22,14 @@ async function startBot() {
 
     try {
       const latest = await fetchLatestWaWebVersion();
+
       version = latest.version;
+
       console.log(
         "Using WhatsApp Web version:",
         version.join(".")
       );
-    } catch (err) {
+    } catch (error) {
       console.log(
         "Could not fetch WhatsApp Web version."
       );
@@ -74,7 +77,8 @@ async function startBot() {
 
             try {
               await new Promise(
-                resolve => setTimeout(resolve, 2000)
+                resolve =>
+                  setTimeout(resolve, 2500)
               );
 
               const code =
@@ -85,16 +89,20 @@ async function startBot() {
               console.log(
                 "================================"
               );
+
               console.log(
                 "🌎 WORLD OF Q'S BOT"
               );
+
               console.log(
                 "PAIRING CODE:",
                 code
               );
+
               console.log(
                 "================================"
               );
+
             } catch (error) {
               console.log(
                 "❌ Pairing code error:",
@@ -107,11 +115,11 @@ async function startBot() {
         }
 
         if (connection === "open") {
+          reconnecting = false;
+
           console.log(
             "🌎 World Of Q's Bot is Online! ✅"
           );
-
-          starting = false;
         }
 
         if (connection === "close") {
@@ -124,7 +132,7 @@ async function startBot() {
             statusCode
           );
 
-          starting = false;
+          reconnecting = false;
 
           if (
             statusCode ===
@@ -133,6 +141,7 @@ async function startBot() {
             console.log(
               "❌ WhatsApp logged out."
             );
+
             return;
           }
 
@@ -143,16 +152,23 @@ async function startBot() {
             console.log(
               "⚠️ WhatsApp requested a restart."
             );
+
+            setTimeout(() => {
+              startBot();
+            }, 3000);
+
             return;
           }
 
           if (statusCode === 515) {
             console.log(
-              "⚠️ Pairing connection closed with 515."
+              "⚠️ Restart required (515). Reconnecting..."
             );
-            console.log(
-              "Do not request another pairing code immediately."
-            );
+
+            setTimeout(() => {
+              startBot();
+            }, 3000);
+
             return;
           }
 
@@ -160,11 +176,12 @@ async function startBot() {
             console.log(
               "❌ WhatsApp authentication rejected (401)."
             );
+
             return;
           }
 
           console.log(
-            "Connection closed without automatic pairing retry."
+            "Connection closed."
           );
         }
       }
@@ -236,7 +253,7 @@ async function startBot() {
       error.message
     );
 
-    starting = false;
+    reconnecting = false;
   }
 }
 
