@@ -1,7 +1,8 @@
 const {
   default: makeWASocket,
   useMultiFileAuthState,
-  DisconnectReason
+  DisconnectReason,
+  fetchLatestWaWebVersion
 } = require("@whiskeysockets/baileys");
 
 const P = require("pino");
@@ -9,20 +10,41 @@ const P = require("pino");
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth");
 
+  let version;
+
+  try {
+    const latest = await fetchLatestWaWebVersion();
+    version = latest.version;
+    console.log("Using WhatsApp Web version:", version.join("."));
+  } catch (error) {
+    console.log("Could not fetch live WhatsApp version.");
+  }
+
   const sock = makeWASocket({
     auth: state,
     logger: P({ level: "silent" }),
-    printQRInTerminal: false
+    printQRInTerminal: false,
+    ...(version ? { version } : {})
   });
 
   sock.ev.on("creds.update", saveCreds);
 
-  let pairingDone = false;
+  let pairingRequested = false;
 
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
 
-    if (connection === "connecting" && !state.creds.registered && !pairingDone) {
+    if (
+      connection === "open"
+    ) {
+      console.log("🌎 World Of Q's Bot is Online! ✅");
+    }
+
+    if (
+      connection === "connecting" &&
+      !state.creds.registered &&
+      !pairingRequested
+    ) {
       const phoneNumber = process.env.PHONE_NUMBER;
 
       if (!phoneNumber) {
@@ -30,13 +52,16 @@ async function startBot() {
         return;
       }
 
-      pairingDone = true;
+      pairingRequested = true;
 
       try {
         console.log("Connecting to WhatsApp...");
+
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const code = await sock.requestPairingCode(phoneNumber);
+        const code = await sock.requestPairingCode(
+          phoneNumber.trim()
+        );
 
         console.log("================================");
         console.log("🌎 WORLD OF Q'S BOT");
@@ -44,20 +69,18 @@ async function startBot() {
         console.log("================================");
       } catch (error) {
         console.log("❌ Pairing code error:", error.message);
-        pairingDone = false;
+        pairingRequested = false;
       }
-    }
-
-    if (connection === "open") {
-      console.log("🌎 World Of Q's Bot is Online! ✅");
     }
 
     if (connection === "close") {
       const statusCode =
         lastDisconnect?.error?.output?.statusCode;
 
+      console.log("Connection closed. Status:", statusCode);
+
       if (statusCode !== DisconnectReason.loggedOut) {
-        console.log("Connection closed. Restarting...");
+        console.log("Restarting...");
         setTimeout(startBot, 5000);
       } else {
         console.log("❌ WhatsApp logged out.");
