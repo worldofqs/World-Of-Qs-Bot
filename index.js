@@ -1,34 +1,63 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason
+} = require("@whiskeysockets/baileys");
+
 const P = require("pino");
-const qrcode = require("qrcode-terminal");
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth");
 
   const sock = makeWASocket({
     auth: state,
-    logger: P({ level: "silent" })
+    logger: P({ level: "silent" }),
+    printQRInTerminal: false
   });
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
-    if (qr) qrcode.generate(qr, { small: true });
+  let pairingRequested = false;
+
+  sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
+    if (!state.creds.registered && !pairingRequested) {
+      pairingRequested = true;
+
+      try {
+        const phoneNumber = process.env.PHONE_NUMBER;
+
+        if (!phoneNumber) {
+          console.log("❌ PHONE_NUMBER environment variable is missing.");
+          return;
+        }
+
+        const code = await sock.requestPairingCode(phoneNumber);
+
+        console.log("================================");
+        console.log("🌎 WORLD OF Q'S BOT");
+        console.log("PAIRING CODE:", code);
+        console.log("================================");
+      } catch (error) {
+        console.log("Pairing code error:", error.message);
+      }
+    }
 
     if (connection === "open") {
-      console.log("🌎 World Of Q's Bot is Online!");
+      console.log("🌎 World Of Q's Bot is Online! ✅");
     }
 
     if (
       connection === "close" &&
       lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
     ) {
-      startBot();
+      console.log("Connection closed. Restarting...");
+      setTimeout(startBot, 3000);
     }
   });
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
+
     if (!msg.message || msg.key.fromMe) return;
 
     const text =
@@ -101,12 +130,15 @@ Members: ${group.participants.length}`
 
     else if (text === ".tagall" && chat.endsWith("@g.us")) {
       const group = await sock.groupMetadata(chat);
+
       const mentions = group.participants.map(user => user.id);
-      const tagged = mentions.map(user => "@" + user.split("@")[0]).join(" ");
+      const tagged = mentions
+        .map(user => "@" + user.split("@")[0])
+        .join(" ");
 
       await sock.sendMessage(chat, {
         text: "📢 " + tagged,
-        mentions: mentions
+        mentions
       });
     }
   });
