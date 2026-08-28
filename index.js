@@ -17,29 +17,37 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  if (!state.creds.registered) {
-    const phoneNumber = process.env.PHONE_NUMBER;
+  let pairingDone = false;
 
-    if (!phoneNumber) {
-      console.log("❌ PHONE_NUMBER environment variable is missing");
-      return;
+  sock.ev.on("connection.update", async (update) => {
+    const { connection, lastDisconnect } = update;
+
+    if (connection === "connecting" && !state.creds.registered && !pairingDone) {
+      const phoneNumber = process.env.PHONE_NUMBER;
+
+      if (!phoneNumber) {
+        console.log("❌ PHONE_NUMBER environment variable is missing");
+        return;
+      }
+
+      pairingDone = true;
+
+      try {
+        console.log("Connecting to WhatsApp...");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        const code = await sock.requestPairingCode(phoneNumber);
+
+        console.log("================================");
+        console.log("🌎 WORLD OF Q'S BOT");
+        console.log("PAIRING CODE:", code);
+        console.log("================================");
+      } catch (error) {
+        console.log("❌ Pairing code error:", error.message);
+        pairingDone = false;
+      }
     }
 
-    try {
-      console.log("Connecting to WhatsApp...");
-
-      const code = await sock.requestPairingCode(phoneNumber);
-
-      console.log("================================");
-      console.log("🌎 WORLD OF Q'S BOT");
-      console.log("PAIRING CODE:", code);
-      console.log("================================");
-    } catch (error) {
-      console.log("❌ Pairing code error:", error.message);
-    }
-  }
-
-  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
     if (connection === "open") {
       console.log("🌎 World Of Q's Bot is Online! ✅");
     }
