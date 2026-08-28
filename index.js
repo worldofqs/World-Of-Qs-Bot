@@ -17,7 +17,7 @@ async function startBot() {
     version = latest.version;
     console.log("Using WhatsApp Web version:", version.join("."));
   } catch (error) {
-    console.log("Could not fetch live WhatsApp version.");
+    console.log("Could not fetch WhatsApp Web version.");
   }
 
   const sock = makeWASocket({
@@ -33,12 +33,6 @@ async function startBot() {
 
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
-
-    if (
-      connection === "open"
-    ) {
-      console.log("🌎 World Of Q's Bot is Online! ✅");
-    }
 
     if (
       connection === "connecting" &&
@@ -73,18 +67,24 @@ async function startBot() {
       }
     }
 
+    if (connection === "open") {
+      console.log("🌎 World Of Q's Bot is Online! ✅");
+    }
+
     if (connection === "close") {
       const statusCode =
         lastDisconnect?.error?.output?.statusCode;
 
       console.log("Connection closed. Status:", statusCode);
 
-      if (statusCode !== DisconnectReason.loggedOut) {
-        console.log("Restarting...");
-        setTimeout(startBot, 5000);
-      } else {
-        console.log("❌ WhatsApp logged out.");
+      if (statusCode === DisconnectReason.loggedOut) {
+        console.log(
+          "❌ WhatsApp logged out. Fresh pairing is required."
+        );
+        return;
       }
+
+      console.log("Connection closed.");
     }
   });
 
@@ -122,35 +122,43 @@ async function startBot() {
 
     else if (text === ".help") {
       await sock.sendMessage(chat, {
-        text: "🌎 World Of Q's Bot\n\nType .menu to see all commands."
+        text:
+          "🌎 World Of Q's Bot\n\nType .menu to see all commands."
       });
     }
 
     else if (text === ".ping") {
       await sock.sendMessage(chat, {
-        text: "🏓 Pong!\nWorld Of Q's Bot is online ✅"
+        text:
+          "🏓 Pong!\nWorld Of Q's Bot is online ✅"
       });
     }
 
     else if (text === ".owner") {
       await sock.sendMessage(chat, {
-        text: "👑 Owner: World Of Q's"
+        text:
+          "👑 Owner: World Of Q's"
       });
     }
 
     else if (text === ".joke") {
       await sock.sendMessage(chat, {
-        text: "😂 Bot نے کہا: میں offline نہیں ہوتا، بس کبھی کبھی سوچتا ہوں!"
+        text:
+          "😂 Bot نے کہا: میں offline نہیں ہوتا، بس کبھی کبھی سوچتا ہوں!"
       });
     }
 
     else if (text === ".quote") {
       await sock.sendMessage(chat, {
-        text: "✨ Keep learning. Keep building. Keep asking questions."
+        text:
+          "✨ Keep learning. Keep building. Keep asking questions."
       });
     }
 
-    else if (text === ".groupinfo" && chat.endsWith("@g.us")) {
+    else if (
+      text === ".groupinfo" &&
+      chat.endsWith("@g.us")
+    ) {
       const group = await sock.groupMetadata(chat);
 
       await sock.sendMessage(chat, {
@@ -161,13 +169,19 @@ Members: ${group.participants.length}`
       });
     }
 
-    else if (text === ".tagall" && chat.endsWith("@g.us")) {
+    else if (
+      text === ".tagall" &&
+      chat.endsWith("@g.us")
+    ) {
       const group = await sock.groupMetadata(chat);
 
-      const mentions = group.participants.map(user => user.id);
-      const tagged = mentions
-        .map(user => "@" + user.split("@")[0])
-        .join(" ");
+      const mentions =
+        group.participants.map(user => user.id);
+
+      const tagged =
+        mentions
+          .map(user => "@" + user.split("@")[0])
+          .join(" ");
 
       await sock.sendMessage(chat, {
         text: "📢 " + tagged,
