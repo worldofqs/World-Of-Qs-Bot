@@ -7,188 +7,237 @@ const {
 
 const P = require("pino");
 
-async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState("auth");
+let starting = false;
 
-  let version;
+async function startBot() {
+  if (starting) return;
+  starting = true;
 
   try {
-    const latest = await fetchLatestWaWebVersion();
-    version = latest.version;
-    console.log("Using WhatsApp Web version:", version.join("."));
-  } catch (error) {
-    console.log("Could not fetch WhatsApp Web version.");
-  }
+    const { state, saveCreds } =
+      await useMultiFileAuthState("auth");
 
-  const sock = makeWASocket({
-    auth: state,
-    logger: P({ level: "silent" }),
-    printQRInTerminal: false,
-    ...(version ? { version } : {})
-  });
+    let version;
 
-  sock.ev.on("creds.update", saveCreds);
-
-  let pairingRequested = false;
-
-  sock.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect } = update;
-
-    if (
-      connection === "connecting" &&
-      !state.creds.registered &&
-      !pairingRequested
-    ) {
-      const phoneNumber = process.env.PHONE_NUMBER;
-
-      if (!phoneNumber) {
-        console.log("❌ PHONE_NUMBER environment variable is missing");
-        return;
-      }
-
-      pairingRequested = true;
-
-      try {
-        console.log("Connecting to WhatsApp...");
-
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        const code = await sock.requestPairingCode(
-          phoneNumber.trim()
-        );
-
-        console.log("================================");
-        console.log("🌎 WORLD OF Q'S BOT");
-        console.log("PAIRING CODE:", code);
-        console.log("================================");
-      } catch (error) {
-        console.log("❌ Pairing code error:", error.message);
-        pairingRequested = false;
-      }
+    try {
+      const latest = await fetchLatestWaWebVersion();
+      version = latest.version;
+      console.log(
+        "Using WhatsApp Web version:",
+        version.join(".")
+      );
+    } catch (err) {
+      console.log(
+        "Could not fetch WhatsApp Web version."
+      );
     }
 
-    if (connection === "open") {
-      console.log("🌎 World Of Q's Bot is Online! ✅");
-    }
+    const sock = makeWASocket({
+      auth: state,
+      logger: P({ level: "silent" }),
+      printQRInTerminal: false,
+      ...(version ? { version } : {})
+    });
 
-    if (connection === "close") {
-      const statusCode =
-        lastDisconnect?.error?.output?.statusCode;
+    sock.ev.on("creds.update", saveCreds);
 
-      console.log("Connection closed. Status:", statusCode);
+    let pairingRequested = false;
 
-      if (statusCode === DisconnectReason.loggedOut) {
-        console.log(
-          "❌ WhatsApp logged out. Fresh pairing is required."
-        );
-        return;
+    sock.ev.on(
+      "connection.update",
+      async (update) => {
+        const {
+          connection,
+          lastDisconnect
+        } = update;
+
+        if (connection === "connecting") {
+          console.log(
+            "Connecting to WhatsApp..."
+          );
+
+          if (
+            !state.creds.registered &&
+            !pairingRequested
+          ) {
+            const phoneNumber =
+              process.env.PHONE_NUMBER;
+
+            if (!phoneNumber) {
+              console.log(
+                "❌ PHONE_NUMBER environment variable is missing"
+              );
+              return;
+            }
+
+            pairingRequested = true;
+
+            try {
+              await new Promise(
+                resolve => setTimeout(resolve, 2000)
+              );
+
+              const code =
+                await sock.requestPairingCode(
+                  phoneNumber.trim()
+                );
+
+              console.log(
+                "================================"
+              );
+              console.log(
+                "🌎 WORLD OF Q'S BOT"
+              );
+              console.log(
+                "PAIRING CODE:",
+                code
+              );
+              console.log(
+                "================================"
+              );
+            } catch (error) {
+              console.log(
+                "❌ Pairing code error:",
+                error.message
+              );
+
+              pairingRequested = false;
+            }
+          }
+        }
+
+        if (connection === "open") {
+          console.log(
+            "🌎 World Of Q's Bot is Online! ✅"
+          );
+
+          starting = false;
+        }
+
+        if (connection === "close") {
+          const statusCode =
+            lastDisconnect?.error?.output
+              ?.statusCode;
+
+          console.log(
+            "Connection closed. Status:",
+            statusCode
+          );
+
+          starting = false;
+
+          if (
+            statusCode ===
+            DisconnectReason.loggedOut
+          ) {
+            console.log(
+              "❌ WhatsApp logged out."
+            );
+            return;
+          }
+
+          if (
+            statusCode ===
+            DisconnectReason.restartRequired
+          ) {
+            console.log(
+              "⚠️ WhatsApp requested a restart."
+            );
+            return;
+          }
+
+          if (statusCode === 515) {
+            console.log(
+              "⚠️ Pairing connection closed with 515."
+            );
+            console.log(
+              "Do not request another pairing code immediately."
+            );
+            return;
+          }
+
+          if (statusCode === 401) {
+            console.log(
+              "❌ WhatsApp authentication rejected (401)."
+            );
+            return;
+          }
+
+          console.log(
+            "Connection closed without automatic pairing retry."
+          );
+        }
       }
+    );
 
-      console.log("Connection closed.");
-    }
-  });
+    sock.ev.on(
+      "messages.upsert",
+      async ({ messages }) => {
+        for (const msg of messages) {
+          if (
+            !msg.message ||
+            msg.key.fromMe
+          ) {
+            continue;
+          }
 
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const msg = messages[0];
+          const text =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage
+              ?.text ||
+            "";
 
-    if (!msg.message || msg.key.fromMe) return;
+          const chat =
+            msg.key.remoteJid;
 
-    const text =
-      msg.message.conversation ||
-      msg.message.extendedTextMessage?.text ||
-      "";
+          if (text === ".ping") {
+            await sock.sendMessage(
+              chat,
+              {
+                text:
+                  "🏓 Pong!\nWorld Of Q's Bot is online ✅"
+              }
+            );
+          }
 
-    const chat = msg.key.remoteJid;
+          else if (text === ".help") {
+            await sock.sendMessage(
+              chat,
+              {
+                text:
+                  "🌎 World Of Q's Bot\n\nType .menu to see commands."
+              }
+            );
+          }
 
-    if (text === ".menu") {
-      await sock.sendMessage(chat, {
-        text: `🌎 WORLD OF Q'S BOT
+          else if (text === ".menu") {
+            await sock.sendMessage(
+              chat,
+              {
+                text:
+`🌎 WORLD OF Q'S BOT
 
 🤖 Basic
-.menu
-.help
 .ping
-.owner
-.joke
-.quote
-
-👥 Groups
-.groupinfo
-.tagall
+.help
+.menu
 
 ✨ More features coming soon!`
-      });
-    }
+              }
+            );
+          }
+        }
+      }
+    );
 
-    else if (text === ".help") {
-      await sock.sendMessage(chat, {
-        text:
-          "🌎 World Of Q's Bot\n\nType .menu to see all commands."
-      });
-    }
+  } catch (error) {
+    console.log(
+      "❌ Bot start error:",
+      error.message
+    );
 
-    else if (text === ".ping") {
-      await sock.sendMessage(chat, {
-        text:
-          "🏓 Pong!\nWorld Of Q's Bot is online ✅"
-      });
-    }
-
-    else if (text === ".owner") {
-      await sock.sendMessage(chat, {
-        text:
-          "👑 Owner: World Of Q's"
-      });
-    }
-
-    else if (text === ".joke") {
-      await sock.sendMessage(chat, {
-        text:
-          "😂 Bot نے کہا: میں offline نہیں ہوتا، بس کبھی کبھی سوچتا ہوں!"
-      });
-    }
-
-    else if (text === ".quote") {
-      await sock.sendMessage(chat, {
-        text:
-          "✨ Keep learning. Keep building. Keep asking questions."
-      });
-    }
-
-    else if (
-      text === ".groupinfo" &&
-      chat.endsWith("@g.us")
-    ) {
-      const group = await sock.groupMetadata(chat);
-
-      await sock.sendMessage(chat, {
-        text: `👥 Group Info
-
-Name: ${group.subject}
-Members: ${group.participants.length}`
-      });
-    }
-
-    else if (
-      text === ".tagall" &&
-      chat.endsWith("@g.us")
-    ) {
-      const group = await sock.groupMetadata(chat);
-
-      const mentions =
-        group.participants.map(user => user.id);
-
-      const tagged =
-        mentions
-          .map(user => "@" + user.split("@")[0])
-          .join(" ");
-
-      await sock.sendMessage(chat, {
-        text: "📢 " + tagged,
-        mentions
-      });
-    }
-  });
+    starting = false;
+  }
 }
 
 startBot();
