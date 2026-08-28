@@ -5,6 +5,9 @@
   "scripts": {
     "start": "node index.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
     "@hapi/boom": "latest",
