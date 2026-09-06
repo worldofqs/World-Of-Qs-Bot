@@ -2,9 +2,6 @@
 
 ![World-Of-Qs-Bot](https://files.catbox.moe/8pfh7i.jpg)
 
-  
-  <a href="https://github.com/worldofqs/World-Of-Qs-Bot/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/worldofqs/World-Of-Qs-Bot?color=F5A623&style=flat-square&logo=github&cacheSeconds=3600"/></a>
-  <a href="https://github.com/worldofqs/World-Of-Qs-Bot/network/members"><img title="Forks" src="https://img.shields.io/github/forks/worldofqs/World-Of-Qs-Bot?color=C8860A&style=flat-square&logo=github&cacheSeconds=3600"/></a>
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/"><img title="Size" src="https://img.shields.io/github/repo-size/worldofqs/World-Of-Qs-Bot?style=flat-square&color=8B4513&cacheSeconds=3600"/></a>
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/graphs/commit-activity"><img height="20" src="https://img.shields.io/badge/Maintained%3F-yes-F5A623.svg"/></a>
 </p>
