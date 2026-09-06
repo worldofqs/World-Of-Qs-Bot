@@ -3,9 +3,6 @@
 </h1>
 
 
-
-<a><img src='https://i.imgur.com/LyHic3i.gif'/></a>
-
 <p align="center">
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/worldofqs/World-Of-Qs-Bot?color=F5A623&style=flat-square&logo=github&cacheSeconds=3600"/></a>
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/network/members"><img title="Forks" src="https://img.shields.io/github/forks/worldofqs/World-Of-Qs-Bot?color=C8860A&style=flat-square&logo=github&cacheSeconds=3600"/></a>
