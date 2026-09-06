@@ -1,6 +1,7 @@
 <h1 align="center">
-  <img src="https://telegra.ph/file/0b2f567be4b78db7e8910.jpg" alt="World-Of-Qs-Bot" width="800" style="border-radius:25px;box-shadow:0 0 40px #C8860A;"/>
+  <img src="https://files.catbox.moe/8pfh7i.jpg" alt="World-Of-Qs-Bot" width="800" style="border-radius:25px;box-shadow:0 0 40px #C8860A;"/>
 </h1>
+
 
 
 <a><img src='https://i.imgur.com/LyHic3i.gif'/></a>
