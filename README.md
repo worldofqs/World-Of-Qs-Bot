@@ -1,8 +1,7 @@
-<h1 align="center">
-  <img src="https://files.catbox.moe/8pfh7i.jpg" alt="World-Of-Qs-Bot" width="800" style="border-radius:25px;box-shadow:0 0 40px #C8860A;"/>
-</h1>
+# World-Of-Qs-Bot
 
-<p align="center">
+![World-Of-Qs-Bot](https://files.catbox.moe/8pfh7i.jpg)
+
   
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/worldofqs/World-Of-Qs-Bot?color=F5A623&style=flat-square&logo=github&cacheSeconds=3600"/></a>
   <a href="https://github.com/worldofqs/World-Of-Qs-Bot/network/members"><img title="Forks" src="https://img.shields.io/github/forks/worldofqs/World-Of-Qs-Bot?color=C8860A&style=flat-square&logo=github&cacheSeconds=3600"/></a>
