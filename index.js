@@ -1,72 +1,9 @@
 const express = require('express');
 const app = express();
-const path = require('path');
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-const pairCodeHTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORLD OF QS - PAIR CODE</title>
-    <style>
-        body {
-            background-color: #0d1b2a;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            border: 2px solid #ff9f1c;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            background-color: #1b263b;
-            box-shadow: 0 4px 15px rgba(255, 159, 28, 0.2);
-            width: 300px;
-        }
-        h1 { color: #ff9f1c; font-size: 20px; margin-bottom: 15px; }
-        input {
-            width: 90%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #ff9f1c;
-            background: #0d1b2a;
-            color: #fff;
-            text-align: center;
-        }
-        button {
-            background-color: #ff9f1c;
-            color: #0d1b2a;
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        p { color: #e0e1dd; font-size: 12px; margin-top: 15px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>WORLD OF QS</h1>
-        <input type="text" placeholder="Enter WhatsApp Number (e.g. 923...)">
-        <br>
-        <button onclick="alert('Pairing system ready!')">GET CODE</button>
-        <p>POWERED BY WORLD OF QS</p>
-    </div>
-</body>
-</html>
-`;
 
 app.get('/', (req, res) => {
     res.send(`
@@ -120,7 +57,101 @@ app.get('/', (req, res) => {
 });
 
 app.get('/pair', (req, res) => {
-    res.send(pairCodeHTML);
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WORLD OF QS - PAIR CODE</title>
+            <style>
+                body {
+                    background-color: #0d1b2a;
+                    color: #ffffff;
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                }
+                .card {
+                    border: 2px solid #ff9f1c;
+                    border-radius: 12px;
+                    padding: 30px;
+                    text-align: center;
+                    background-color: #1b263b;
+                    box-shadow: 0 4px 15px rgba(255, 159, 28, 0.2);
+                    width: 300px;
+                }
+                h1 { color: #ff9f1c; font-size: 20px; margin-bottom: 15px; }
+                input {
+                    width: 90%;
+                    padding: 10px;
+                    margin-bottom: 15px;
+                    border-radius: 6px;
+                    border: 1px solid #ff9f1c;
+                    background: #0d1b2a;
+                    color: #fff;
+                    text-align: center;
+                }
+                button {
+                    background-color: #ff9f1c;
+                    color: #0d1b2a;
+                    border: none;
+                    padding: 10px 20px;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    cursor: pointer;
+                }
+                #codeDisplay {
+                    margin-top: 15px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #2ec4b6;
+                }
+                p { color: #e0e1dd; font-size: 12px; margin-top: 15px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>WORLD OF QS</h1>
+                <input type="text" id="num" placeholder="Enter Number (e.g. 923001234567)">
+                <br>
+                <button onclick="getCode()">GET CODE</button>
+                <div id="codeDisplay"></div>
+                <p>POWERED BY WORLD OF QS</p>
+            </div>
+            <script>
+                async function getCode() {
+                    const num = document.getElementById('num').value;
+                    const display = document.getElementById('codeDisplay');
+                    if (!num) {
+                        display.style.color = '#e63946';
+                        display.innerText = 'Please enter number!';
+                        return;
+                    }
+                    display.style.color = '#ff9f1c';
+                    display.innerText = 'Connecting...';
+                    try {
+                        const res = await fetch('/code?number=' + num);
+                        const data = await res.json();
+                        if (data.code) {
+                            display.style.color = '#2ec4b6';
+                            display.innerText = 'CODE: ' + data.code;
+                        } else {
+                            display.style.color = '#e63946';
+                            display.innerText = data.error || 'Failed to generate code';
+                        }
+                    } catch (e) {
+                        display.style.color = '#e63946';
+                        display.innerText = 'Server Error!';
+                    }
+                }
+            </script>
+        </body>
+        </html>
+    `);
 });
 
 module.exports = app;
@@ -128,3 +159,4 @@ module.exports = app;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
+
