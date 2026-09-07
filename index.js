@@ -1,10 +1,15 @@
 const express = require('express');
+const makeWASocket = require('@whiskeysockets/baileys').default;
+const { useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
+const pino = require('pino');
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Express landing page
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -56,6 +61,7 @@ app.get('/', (req, res) => {
     `);
 });
 
+// Front-end Form Page
 app.get('/pair', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -134,7 +140,7 @@ app.get('/pair', (req, res) => {
                     display.style.color = '#ff9f1c';
                     display.innerText = 'Connecting...';
                     try {
-                        const res = await fetch('/code?number=' + num);
+                        const res = await fetch('/code?number=' + encodeURIComponent(num));
                         const data = await res.json();
                         if (data.code) {
                             display.style.color = '#2ec4b6';
@@ -154,9 +160,42 @@ app.get('/pair', (req, res) => {
     `);
 });
 
+// Backend API endpoint jisko front-end call kar raha hai
+app.get('/code', async (req, res) => {
+    let num = req.query.number;
+
+    if (!num) {
+        return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    // Standardize phone number (digits only)
+    num = num.replace(/[^0-9]/g, '');
+
+    try {
+        const { state, saveCreds } = await useMultiFileAuthState(`./session_${Date.now()}`);
+        const sock = makeWASocket({
+            auth: state,
+            printQRInTerminal: false,
+            logger: pino({ level: 'silent' })
+        });
+
+        sock.ev.on('creds.update', saveCreds);
+
+        if (!sock.authState.creds.registered) {
+            await delay(1500); // Wait briefly for initialization
+            const pairCode = await sock.requestPairingCode(num);
+            return res.json({ code: pairCode });
+        } else {
+            return res.status(400).json({ error: 'Device already registered' });
+        }
+    } catch (err) {
+        console.error('Pairing error:', err);
+        return res.status(500).json({ error: 'Server Error!' });
+    }
+});
+
 module.exports = app;
 
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
-
