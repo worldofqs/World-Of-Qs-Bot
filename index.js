@@ -1,88 +1,60 @@
-/**
- * • Bhai itni mehnat khud ka bot banane par lagate to acha tha
- * • Yahan copy paste ka kuch nahi milne wala
- * • Powered by world of Qs
- */
+ const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 8080;
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+app.get('/', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WORLD OF QS</title>
+            <style>
+                body {
+                    background-color: #0d1b2a;
+                    color: #ffffff;
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                }
+                .card {
+                    border: 2px solid #ff9f1c;
+                    border-radius: 12px;
+                    padding: 30px;
+                    text-align: center;
+                    background-color: #1b263b;
+                    box-shadow: 0 4px 15px rgba(255, 159, 28, 0.2);
+                }
+                h1 {
+                    color: #ff9f1c;
+                    font-size: 24px;
+                    margin-bottom: 10px;
+                }
+                p {
+                    color: #e0e1dd;
+                    font-size: 14px;
+                    letter-spacing: 1px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>● WORLD OF QS IS RUNNING</h1>
+                <p>POWERED BY WORLD OF QS</p>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
  
  
  
