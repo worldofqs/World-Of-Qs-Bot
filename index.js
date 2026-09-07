@@ -117,32 +117,34 @@ app.get('/code', async (req, res) => {
             version,
             auth: state,
             printQRInTerminal: false,
-            logger: pino({ level: 'fatal' }),
-            browser: ["Ubuntu", "Chrome", "20.0.04"]
+            logger: pino({ level: 'silent' }),
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 0,
+            keepAliveIntervalMs: 10000,
+            emitOwnEvents: false,
+            fireInitQueries: false
         });
 
         sock.ev.on('creds.update', saveCreds);
 
-        // Wait for socket initialization
-        await delay(3000);
+        await delay(2000);
 
         if (!sock.authState.creds.registered) {
             let code = await sock.requestPairingCode(num);
             code = code?.match(/.{1,4}/g)?.join("-") || code;
 
-            // Cleanup temp files
             setTimeout(() => {
                 fs.remove(sessionDir).catch(() => {});
-            }, 5000);
+            }, 3000);
 
             return res.json({ code: code });
         } else {
             return res.status(400).json({ error: 'Number already paired' });
         }
     } catch (err) {
-        console.error('Pair Error:', err);
         fs.remove(sessionDir).catch(() => {});
-        return res.status(500).json({ error: 'Failed to generate pairing code!' });
+        return res.status(500).json({ error: 'Vercel Timeout! Retry again.' });
     }
 });
 
