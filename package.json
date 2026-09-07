@@ -1,12 +1,12 @@
 {
-  "name": "ADEEL-MD",
+  "name": "world-of-qs",
   "version": "4.5.0",
-  "description": "A WhatsApp Bot Created By ADEEL-MD",
+  "description": "A WhatsApp Bot Created By world of Qs",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name ADEEL-MD",
-    "stop": "pm2 stop ADEEL-MD",
-    "restart": "pm2 restart ADEEL-MD"
+    "start": "pm2 start index.js --deep-monitoring --attach --name world-of-qs",
+    "stop": "pm2 stop world-of-qs",
+    "restart": "pm2 restart world-of-qs"
   },
   "engines": {
     "node": ">=24.x",
