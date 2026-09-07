@@ -1,8 +1,8 @@
 {
-  "name": "ADEEL-MD",
-  "description": "Javascript WhatsApp bot made by ADEEL-MD",
+  "name": "world of Qs",
+  "description": "Javascript WhatsApp bot made by world of Qs",
   "logo": "https://files.catbox.moe/sx07qa.jpg",
-  "keywords": ["ADEEL-MD"],
+  "keywords": ["world of Qs"],
   "success_url": "/",
   "env": {
     "SESSION_ID": {
@@ -13,7 +13,7 @@
     "STICKER_NAME": {
       "description": "type your sticker pack name.",
       "required": false,
-      "value": "ADEEL-MD"
+      "value": "world of Qs"
     },
     "PREFIX": {
       "description": "paste your bot prefix note! Don't apply null prefix.",
@@ -63,12 +63,12 @@
     "AUTO_STATUS_MSG": {
       "description": "Type custom message on status reply",
       "required": true,
-      "value": "*SEEN YOUR STATUS BY ADEEL-MD 🖤*"
+      "value": "*SEEN YOUR STATUS BY world of Qs 🖤*"
     },
     "OWNER_NAME": {
       "description": "Type Bot Owner Name.",
       "required": false,
-      "value": "ADEEL-MD"
+      "value": "world of Qs"
     },
     "OWNER_NUMBER": {
       "description": "put the owner number for bot.",
@@ -78,7 +78,7 @@
     "BOT_NAME": {
       "description": "Type here the bot name.",
       "required": false,
-      "value": "ADEEL-MD"
+      "value": "world of Qs"
     },
     "ANTI_LINK": {
       "description": "Make it true if you want bot auto remove group link.",
@@ -108,7 +108,7 @@
     "DESCRIPTION": {
       "description": "add caption for menu and other",
       "required": false,
-      "value": "*𝐂𝐑𝐄𝐀𝐓𝐄𝐑 𝐀𝐃𝐄𝐄𝐋-𝐌𝐃*"
+      "value": "*𝐂𝐑𝐄𝐀𝐓𝐄𝐑 world of Qs*"
     },
     "DELETE_LINKS": {
       "description": "remove links from group automatically without removing member",
