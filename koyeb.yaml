@@ -1,6 +1,6 @@
-name: ADEEL-MD
+Name: world of Qs
 services:
-  - name: adeel_md-service
+  - name: world_of_qs-service
     type: web
     ports:
       - 5000
@@ -12,4 +12,4 @@ services:
     regions:
       - fra
       - sin
-
+      
